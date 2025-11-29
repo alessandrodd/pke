@@ -313,7 +313,7 @@ def load_lda_model(input_file):
         input_file (str): the gzip input file containing lda model.
 
     Returns:
-        dictionnary: a dictionary of the form {term_1: freq}, freq being an
+        dictionary: a dictionary of the form {term_1: freq}, freq being an
             integer.
         model: an initialized sklearn.decomposition.LatentDirichletAllocation
             model.
@@ -396,14 +396,15 @@ def compute_lda_model(documents,
     # get the stoplist from pke.lang because CountVectorizer only contains
     # english stopwords atm
     if stoplist is None:
-        stoplist = stopwords.get(language)
+        # CountVectorizer expects a list
+        #  stopwords.get is a set
+        stoplist = list(stopwords.get(language))
     tf_vectorizer = CountVectorizer(
         stop_words=stoplist)
     tf = tf_vectorizer.fit_transform(texts)
 
     # extract vocabulary
-    vocabulary = tf_vectorizer.get_feature_names()
-    # TODO: deprecation warning: use get_feature_names_out
+    vocabulary = list(tf_vectorizer.get_feature_names_out())
 
     # create LDA model and train
     lda_model = LatentDirichletAllocation(n_components=n_topics,

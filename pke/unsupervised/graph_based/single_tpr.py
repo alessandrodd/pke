@@ -128,12 +128,16 @@ class TopicalPageRank(SingleRank):
 
         # set the default LDA model if none provided
         if lda_model is None:
-            lda_model = os.path.join(self._models,
-                                     "lda-1000-semeval2010.py3.pickle.gz")
+            lda_model = os.path.join(self._models, "lda-1000-semeval2010.py3.pickle.gz")
             logging.warning('LDA model is hard coded to {}'.format(lda_model))
 
         # load parameters from file
-        dictionary, model = pke.utils.load_lda_model(lda_model)
+        if isinstance(lda_model, str):
+            dictionary, model = pke.utils.load_lda_model(lda_model)
+
+        # otherwise, we expect a loaded lda model
+        else:
+            dictionary, model = lda_model
 
         # build the document representation
         doc = []
@@ -141,7 +145,7 @@ class TopicalPageRank(SingleRank):
             doc.extend([s.stems[i] for i in range(s.length)])
 
         # vectorize document
-        tf_vectorizer = CountVectorizer(stop_words=self.stoplist,
+        tf_vectorizer = CountVectorizer(stop_words=list(self.stoplist),
                                         vocabulary=dictionary)
 
         tf = tf_vectorizer.fit_transform([' '.join(doc)])
@@ -182,7 +186,7 @@ class TopicalPageRank(SingleRank):
             W[word] /= norm
 
         # compute the word scores using biased random walk
-        w = nx.pagerank(G=self.graph,
+        w = nx.pagerank(self.graph,
                         personalization=W,
                         alpha=0.85,
                         tol=0.0001,
